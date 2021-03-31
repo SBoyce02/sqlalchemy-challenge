@@ -104,14 +104,19 @@ def tobs():
 
 
 
-    most_active_obs_data = session.query(measurement.date, measurement.tobs).\
+    most_active_obs_data = session.query(measurement.tobs).\
     filter(measurement.date >= last_twelve_months).\
     filter(measurement.station == most_active_station).\
     group_by(measurement.date).all()
 
     session.close()
 
-    return jsonify(most_active_obs_data.tobs)
+    twelve_month_temps=list(np.ravel(most_active_obs_data))
+
+  
+
+    return jsonify(twelve_month_temps)
+        
 
 
 #   * Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.
