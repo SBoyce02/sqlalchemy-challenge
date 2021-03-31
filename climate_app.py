@@ -35,7 +35,8 @@ def home():
     return (f"available routes:<br>"
              f"/api/v1.0/precipitation<br>"
              f"/api/v1.0/stations<br>"
-             f"/api/v1.0/tobs<br>")
+             f"/api/v1.0/tobs<br>"
+             f"/api/v1.0/<start>")
 
 
 # * Convert the query results to a dictionary using `date` as the key and `prcp` as the value.
@@ -121,49 +122,45 @@ def tobs():
 
 #   * Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start or start-end range.
 
+#* When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
+    # https://geo-python.github.io/site/notebooks/L6/numpy/Advanced-data-processing-with-NumPy.html
+
+## https://geo-python.github.io/site/notebooks/L6/numpy/Advanced-data-processing-with-NumPy.html
 
 @app.route("/api/v1.0/<start>")
 def start_search(start):
     session = Session(engine)
 
-    start_date_temps = session.query(func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).\
-                filter(measurement.station == most_active_station).\
-                group_by(measurement.date).all()
+    start_date= dt.datetime.strptime(start, '%m-%d-%Y')
 
+    start_date_temps = session.query(func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).\
+    filter(measurement.date>= start_date).all()
+    
     session.close()
 
-    for start_date in start_date_temps:
-        if start_date >= start:
-            return jsonify(start_date_temps)
-    return jsonify(""), 404
+    return jsonify(start_date_temps)
 
-#   * When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
-    # https://geo-python.github.io/site/notebooks/L6/numpy/Advanced-data-processing-with-NumPy.html
-
-
-# @app.route("/api/v1.0/<start>")
-# def start(start):
-#     session = Session(engine)
-
-#     T_start = session.query(tmin[(date >= start]  , tavg[(date >= start]  , tmax[(date >= start )
-#     session.close()
-
-#     return jsonify(T_start)
-
+    
 #   * When given the start and the end date, calculate the `TMIN`, `TAVG`, and `TMAX` for dates between the start and end date inclusive.
 
-# tmax_2010 = tmax[(date >= 20100101) & (date <= 20101231)]
+@ app.route("/api/v1.0/<first>/<end>")
+def first_end(first,end):
 
-# @ app.route("/api/v1.0/<start>/<end>")
-# def end():
-#     session=Session(engine)
+    session = Session(engine)
 
-#     T_end=session.query(tmin[(date >= 20100101) & (date <= 20101231)], tavg[(\
-#         date >= 20100101) & (date <= 20101231)], tmax[(date >= 20100101) & (date <= 20101231)])
+    start_date= dt.datetime.strptime(first, '%m-%d-%Y')
+    
+    end_date= dt.datetime.strptime(end, '%m-%d-%Y')
 
-#     session.close()
+    btwn_date_temps = session.query(func.min(measurement.tobs), func.avg(measurement.tobs), func.max(measurement.tobs)).\
+    filter(measurement.date >= start_date).filter(measurement.date <= end_date).all()
+    
+    session.close()
 
-#     return jsonify(T_end)
+    
+    
+
+    return jsonify(btwn_date_temps)
 
 
 
